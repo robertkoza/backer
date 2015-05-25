@@ -1,0 +1,514 @@
+<?php
+/**
+ * Magento
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Academic Free License (AFL 3.0)
+ * that is bundled with this package in the file LICENSE_AFL.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://opensource.org/licenses/afl-3.0.php
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@magentocommerce.com so we can send you a copy immediately.
+ *
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magentocommerce.com for more information.
+ *
+ * @category    design
+ * @package     base_default
+ * @copyright   Copyright (c) 2012 Magento Inc. (http://www.magentocommerce.com)
+ * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+ */
+?>
+<?php
+/**
+ * Product list template
+ *
+ * @see Mage_Catalog_Block_Product_List
+ */
+?>
+
+<?php
+$_productCollection = $this->getLoadedProductCollection();
+$_helper = $this->helper('catalog/output');
+
+/* Ermiteln ob Suchseite */
+$webUrl = $_SERVER['REQUEST_URI'];
+$suchString = 'result';
+$suchStringFilter = '?';
+
+$pos = strpos($webUrl, $suchString);
+$filter = strpos($webUrl, $suchStringFilter);
+
+if ($pos === false) {
+    
+} else {
+    $suchSeiteJa = 1;
+}
+
+if ($filter === false) {
+    
+} else {
+    $filterSeiteJa = 1;
+}
+?>
+
+<?php if (!$_productCollection->count()): ?>
+
+    <p class="note-msg"><?php echo $this->__('There are no products matching the selection.') ?></p>
+
+<?php else: ?>
+
+    <?php echo $this->getToolbarHtml() ?>
+
+    <?php // List mode    ?>
+
+    <?php if ($this->getMode() != 'grid'): ?>
+        <?php $_iterator = 0; ?>
+
+        <?php /* <table width="953" cellspacing="2" cellpadding="0" border="0"> */ ?>
+
+        <?php
+        foreach ($_productCollection as $_product):
+
+            //
+            $_attributSetId = $_product->getData('attribute_set_id');
+
+            //
+            $_attributeSetModel = Mage::getModel('eav/entity_attribute_set');
+            $_attributeSetModel->load($_attributSetId);
+
+            #Zend_Debug::dump($_attributeAll);
+            //
+                $arrayAttributSetId[$_attributSetId] = $_attributSetId;
+
+            while (list($key, $val) = each($arrayAttributSetId)) {
+                #$attributSetIdNew =  "$key => $val";
+                $attributSetIdNew = $val;
+
+                $_attributeHeaderAll = Mage::getModel('catalog/product')->getCollection()->addAttributeToSelect('*')->addFieldToFilter('attribute_set_id', $attributSetIdNew);
+
+                // Attributset Name (Kategorie Name)
+                $_attributeSetName = $_attributeSetModel->getAttributeSetName();
+
+                #Zend_Debug::dump($_attributeSetName);
+
+                foreach ($_attributeHeaderAll as $product):
+                    #Zend_Debug::dump($product);
+                    $attribute = $product->getData();
+                    $a_keys = array_keys($attribute);
+
+                #Zend_Debug::dump($attributSetIdNew);
+                endforeach;
+                ?>  
+
+
+                <?php /* Tabellenkopf */ ?>
+				<div class="infoP" style="text-align: center; background: url('http://backer.pl/img/i_r.jpg') no-repeat scroll right center rgb(136, 136, 136); padding: 10px; border:2px solid #eeeeee; border-bottom:none;"><img style="float:left; margin-left:7px; color:white;
+font-size: 12px;" alt="<b>Aby wysłać zapytanie lub zamówienie - proszę wybrać odpowiedni produkt</b> " src="http://backer.pl/img/i_l.jpg"><span style="font-weight:bold; color:white; font-size:12px;">Aby wysłać zapytanie lub zamówienie - proszę wybrać odpowiedni produkt<span></div>
+				
+                <table id="example" width="985" cellspacing="2" cellpadding="0" border="0" class="persist-area"> 
+                    <thead> 
+
+                        <?php if ($suchSeiteJa or $filterSeiteJa === 1) : ?>                 
+
+                            <?php
+                            $categoryIds = $_product->getCategoryIds();
+
+                            if (count($categoryIds)) {
+                                $firstCategoryId = $categoryIds[0];
+                                $_category = Mage::getModel('catalog/category')->load($firstCategoryId);
+                            }
+
+                            #Zend_Debug::dump($_category);
+                            ?>
+
+                            <tr>                 
+                                <th style="background: #EEE" height="25px" align="left"></th>
+                            </tr>
+
+                            <tr>                    
+                                <th valign="center" height="25" scope="col" align="left" colspan="50">&nbsp;&nbsp;&nbsp;<?php echo $_category->getName(); ?></th>
+                            </tr>
+
+                            <tr>
+                                <?php /* <th width="28" scope="col">&nbsp;</th> */ ?>                   
+                                <th valign="center" align="left" colspan="50" style="background: #FFF;">
+                                    <?php
+                                    #$_category = Mage::getModel('catalog/category')->loadByAttribute('name', $_attributeSetName);
+                                    #$_category = Mage::getModel('catalog/category')->loadByAttribute('technischezeichnungpg', 'BK36_0008.jpg');
+                                    #$_category = Mage::getModel('catalog/category');
+                                    #$_category = Mage::getModel('catalog/category');
+                                    ?>
+                                    <?php if ($_category->getTechnischezeichnungpg() != null) : ?>
+                                        <img src="<?php echo Mage::getBaseUrl('media') . 'catalog/category/' . $_category->getTechnischezeichnungpg(); ?>" />
+                                        <a style="float:right;" class="BtnRotSenden" href="<?php echo Mage::getBaseUrl() . $_category->getUrlPath(); ?>">Strona produktu</a> 
+                                    <?php endif; ?>
+                                </th>
+                            </tr>
+
+                        <?php endif; ?>
+
+                        <tr class="">
+                            <th width="137" height="45" scope="col" >Kod produktu</th>
+
+                            <?php
+                            foreach ($a_keys as $key => $value):
+
+                                if (preg_match('/^bk/', $value)):
+                                    $valuesTabellenkopf = $value;
+                                    ?>
+                                    <th height="45" id="<?php echo $valuesTabellenkopf; ?>"><?php echo $valuesTabellenkopf; ?></th>
+                                    <?php
+                                endif;
+
+                            endforeach;
+                            ?>
+                            <?php
+                            /* CAD nur Placo Grip */
+
+                            $UrlPath = Mage::getModel('catalog/layer')->getCurrentCategory()->getUrlPath();
+                            $UrlPath = explode("/", $UrlPath);
+
+                            if ($UrlPath[0] === 'placo-grip') {
+                                ?>    
+                                <th width="28" height="45" scope="col" rowspan="3">CAD</th>
+                            <?php } ?>
+							<!-- dodane -->
+							<th class="" width="5" height="45">+</th>
+                        </tr>
+                    </thead>  
+					<tfoot id="wyszukaj" style="display: table-header-group;">
+						<tr class="persist-header">
+							<!-- usuniecie tgo powoduje usuneicie listy rozwijalnej nad kolumna plus -->
+							<th><input type="text" name="search_filename" placeholder="Szukaj" value="" class="search_init" style="width: 90%;"/></th>
+							<?php
+                            foreach ($a_keys as $key => $value):
+
+                                if (preg_match('/^bk/', $value)):
+                                    $valuesTabellenkopf = $value;
+                                    ?>
+                                    <th height="45" id="<?php echo $valuesTabellenkopf; ?>"></th>
+                                    <?php
+                                endif;
+
+                            endforeach;
+                            ?>
+							<!-- dodane -->
+							<th class="" height="45" width="5" id="plus"></th>
+						</tr>
+					</tfoot>					
+
+
+                    <?php /* Tabelleninhalt */ ?>
+                    <?php #Zend_Debug::dump($_product);       ?>
+					<tbody>
+                    <?php foreach ($_attributeHeaderAll as $_product): ?>
+
+                        
+					<tr class="standard <?php
+					
+                    if ($_iterator & 1) {
+                        echo "dunkel";
+                    } else {
+                        echo "hell";
+                    }
+                        ?>
+                                <?php if (++$_iterator == sizeof($_productCollection)): ?>last<?php endif; ?>">
+
+                                <td><?php echo $_helper->productAttribute($_product, $_product->getSku(), 'sku'); ?></td>
+
+                                <?php
+                                foreach ($a_keys as $key => $value) {
+                                    if (preg_match('/^bk/', $value)) {
+                                        $c_Method = 'get' . ucfirst($value);
+                                        ?>
+
+                                        <td><?php echo $_helper->productAttribute($_product, $_product->$c_Method(), $value); ?></td>
+									
+                                        <?php
+                                    }
+                                }
+                                ?>
+								
+								<td>
+									<div class="price">
+											<span class="styled-link add-expand">+</span>
+									</div>
+									
+									<div class="prices">
+										<form id="product_addtocart_form" action="http://www.baecker.eu/shop/checkout/cart/add/uenc/aHR0cDovL3d3dy5iYWVja2VyLmV1L3Nob3AvcGxhY28tdGVjL2Rpc3Rhbnpib2x6ZW4vNi1rYW50LWRpc3Rhbnpib2x6ZW4tbWl0LWlubmVuLWlubmVuZ2V3aW5kZS1hdXMtc3RhaGwuaHRtbA,,/product/4459/" method="post">	
+											<div class="TDetailContent">
+												<div class="ContainerAnzahl">
+													<span class="Anzahl">Anzahl</span>
+													<input onkeyup="nurZahlen(this)" class="SelectInputSteuckzahl" value="" name="qty" type="text">
+													<span class="InputSteuckzahl">Stck.</span>
+												</div>
+												<div class="Bemerkung"><span class="Bemerkung">Bemerkung</span><textarea class="AreaTDetail" name="options[4495]"></textarea></div>
+												<div class="TDetailContentUnten">
+													<button class="BtnRotSendenShop" title="" onclick="submit(); return false;">
+														<span>
+																<span>Dodaj do zapytania</span>
+														</span>
+													</button>
+												</div>
+											</div>
+										</form>
+									</div>
+								</td>
+		
+                                <?php
+                                
+                                /* CAD nur Placo Grip */
+
+                                $UrlPath = Mage::getModel('catalog/layer')->getCurrentCategory()->getUrlPath();
+                                $UrlPath = explode("/", $UrlPath);
+
+                                if ($UrlPath[0] === 'placo-grip') {
+                                    ?>
+
+                                    <td class="CADSpalte">
+                                        <a onclick="overlay('display')" id="CADAnfrage" href="javascript:void(0)" title="CAD Daten Anfrage">
+                                            <img src="<?php echo Mage::getBaseUrl('skin') . 'frontend/baecker/default/css/img/produkte/' ?>ico_cad_klein.png" alt="" title="" />
+                                        </a>
+
+                                        <div class="CAD_Anfrage">
+                                            <img src="<?php echo Mage::getBaseUrl('skin') . 'frontend/baecker/default/css/img/produkte/' ?>cad_anfrage_xl.jpg" />
+
+                                            <div class="CAD_CloseBox">
+                                                <a class="CADCloseLink" href="javascript:void(0)" title="Schließen">Zamknij</a>
+                                            </div>
+
+                                            <div class="BlockInput">
+                                                <label>Produkt</label>
+                                                <input style="cursor: not-allowed" type="text" value="<?php echo $_helper->productAttribute($_product, $_product->getSku(), 'sku'); ?>" name="cadanfrage" id="cadSku" readonly />
+                                            </div>
+
+                                            <div class="BlockInput mL">
+                                                <label class="short">Firma</label>
+                                                <input type="text" value="" name="cadanfrage" id="cadFirma" />
+                                            </div>
+
+                                            <div class="BlockInput">
+                                                <label>Osoba kontaktowa</label>
+                                                <input type="text" name="cadanfrage" id="cadKontakt" />
+                                            </div>
+
+                                            <div class="BlockInput mL">
+                                                <label class="short">E-Mail</label>
+                                                <input type="text" name="cadanfrage" id="cadEmail" />
+                                            </div>
+
+                                            <p style="display: none; width: 690px; height: 82px; text-align: left;">Otrzymaliśmy zapytanie. Wkrótce skontaktujemy sie z Tobą.<br></p>
+
+                                            <a id="cadAnfrage" class="CADSenden BtnRotSenden" href="javascript:void(0);">Zapytaj o plik CAD</a>
+                                        </div>
+
+                                    </td>  
+
+                                <?php } ?>
+								
+                            </tr>
+
+                        
+
+                        <?php
+                        #Zend_Debug::dump($this->helper('checkout/cart')->getAddToCartUrl($product, $additional));
+                        ?>
+
+                        
+
+                        <?php
+                    endforeach;
+                    ?>
+					</tbody>
+                </table>
+				
+            <?php } ?>
+
+            <?php
+        endforeach;
+        ?>
+
+        <?php /* </table> */ ?>
+
+        <script type="text/javascript">decorateList('products-list', 'none-recursive')</script>
+    <?php endif; ?>
+<?php endif; ?>
+
+<script type="text/javascript" src="/shop/js/conception/jquery.dataTables.min.js"></script>
+<script>
+$(document).ready(function() {
+ 
+
+    $('#example').DataTable( {
+        initComplete: function () {
+            var api = this.api();
+ 
+            api.columns().indexes().flatten().each( function ( i ) {
+                var column = api.column( i );
+                var select = $('<select><option value="">Wybierz</option></select>')
+                    .appendTo( $(column.footer()).empty() )
+                    .on( 'change', function () {
+                        var val = $.fn.dataTable.util.escapeRegex(
+                            $(this).val()
+                        );
+ 
+                        column
+                            .search( val ? '^'+val+'$' : '', true, false )
+                            .draw();
+                    } );
+ 
+                column.data().unique().sort().each( function ( d, j ) {
+                    select.append( '<option value="'+d+'">'+d+'</option>' )
+                } );
+            } );
+        },
+		 "columnDefs": [
+			{ "type": "num", "targets": 2 }
+		  ],
+
+		"lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "Wszystko"]]
+		
+    } );
+} );
+
+$('.add-expand').on('click', function() {
+	//$(".ukryj").removeClass('active');
+	//$('.ukryj span.styled-link').parent().parent().not(this).removeClass('active');
+    $(this).parent().parent().toggleClass('active');
+});
+</script>
+
+    <script type="text/javascript">
+        $('#wyszukaj').scrollFix();
+    </script>
+
+
+<?php /*
+  <?php if ($this->getMode() != 'grid'): ?>
+
+
+  <?php foreach ($_productCollection as $_product): ?>
+
+
+  <?php // Product description ?>
+  <div class="product-shop">
+
+  <?php $_productNameStripped = $this->stripTags($_product->getName(), null, true); ?>
+  <h2 class="product-name">
+  <?php echo $_helper->productAttribute($_product, $_product->getName(), 'name'); ?>
+  </h2>
+
+  </div>
+
+  <?php endforeach; ?>
+
+  <script type="text/javascript">decorateList('products-list', 'none-recursive')</script>
+  <?php endif; ?>
+
+ */ ?>
+
+<?php /*
+  <?php if (!$_productCollection->count()): ?>
+  <p class="note-msg"><?php echo $this->__('There are no products matching the selection.') ?></p>
+  <?php else: ?>
+  <div class="category-products">
+  <?php echo $this->getToolbarHtml() ?>
+  <?php // List mode ?>
+  <?php if ($this->getMode() != 'grid'): ?>
+  <?php $_iterator = 0; ?>
+  <ol class="products-list" id="products-list">
+  <?php foreach ($_productCollection as $_product): ?>
+  <li class="item<?php if (++$_iterator == sizeof($_productCollection)): ?> last<?php endif; ?>">
+  <?php // Product Image ?>
+  <a href="<?php echo $_product->getProductUrl() ?>" title="<?php echo $this->stripTags($this->getImageLabel($_product, 'small_image'), null, true) ?>" class="product-image"><img src="<?php echo $this->helper('catalog/image')->init($_product, 'small_image')->resize(135); ?>" width="135" height="135" alt="<?php echo $this->stripTags($this->getImageLabel($_product, 'small_image'), null, true) ?>" /></a>
+  <?php // Product description ?>
+  <div class="product-shop">
+  <div class="f-fix">
+
+  <div style="background:red"><?php echo $_helper->productAttribute($_product, $_product->getSku(), 'sku'); ?></div>
+  <div style="background:red"><?php echo $_helper->productAttribute($_product, $_product->getBkGrossL(), 'bk_gross_l'); ?></div>
+  <div style="background:red"><?php echo $_helper->productAttribute($_product, $_product->getBkGrossR(), 'bk_gross_r'); ?></div>
+
+  <?php $_productNameStripped = $this->stripTags($_product->getName(), null, true); ?>
+  <h2 class="product-name"><a href="<?php echo $_product->getProductUrl() ?>" title="<?php echo $_productNameStripped; ?>"><?php echo $_helper->productAttribute($_product, $_product->getName(), 'name'); ?></a></h2>
+  <?php if ($_product->getRatingSummary()): ?>
+  <?php echo $this->getReviewsSummaryHtml($_product) ?>
+  <?php endif; ?>
+  <?php echo $this->getPriceHtml($_product, true) ?>
+  <?php if ($_product->isSaleable()): ?>
+  <p><button type="button" title="<?php echo $this->__('Add to Cart') ?>" class="button btn-cart" onclick="setLocation('<?php echo $this->getAddToCartUrl($_product) ?>')"><span><span><?php echo $this->__('Add to Cart') ?></span></span></button></p>
+  <?php else: ?>
+  <p class="availability out-of-stock"><span><?php echo $this->__('Out of stock') ?></span></p>
+  <?php endif; ?>
+  <div class="desc std">
+  <?php echo $_helper->productAttribute($_product, $_product->getShortDescription(), 'short_description') ?>
+  <a href="<?php echo $_product->getProductUrl() ?>" title="<?php echo $_productNameStripped ?>" class="link-learn"><?php echo $this->__('Learn More') ?></a>
+  </div>
+  <ul class="add-to-links">
+  <?php if ($this->helper('wishlist')->isAllow()) : ?>
+  <li><a href="<?php echo $this->helper('wishlist')->getAddUrl($_product) ?>" class="link-wishlist"><?php echo $this->__('Add to Wishlist') ?></a></li>
+  <?php endif; ?>
+  <?php if ($_compareUrl = $this->getAddToCompareUrl($_product)): ?>
+  <li><span class="separator">|</span> <a href="<?php echo $_compareUrl ?>" class="link-compare"><?php echo $this->__('Add to Compare') ?></a></li>
+  <?php endif; ?>
+  </ul>
+  </div>
+  </div>
+  </li>
+  <?php endforeach; ?>
+  </ol>
+  <script type="text/javascript">decorateList('products-list', 'none-recursive')</script>
+
+  <?php else: ?>
+
+  <?php // Grid Mode ?>
+
+  <?php $_collectionSize = $_productCollection->count() ?>
+  <?php $_columnCount = $this->getColumnCount(); ?>
+  <?php $i = 0;
+  foreach ($_productCollection as $_product): ?>
+  <?php if ($i++ % $_columnCount == 0): ?>
+  <ul class="products-grid">
+  <?php endif ?>
+  <li class="item<?php if (($i - 1) % $_columnCount == 0): ?> first<?php elseif ($i % $_columnCount == 0): ?> last<?php endif; ?>">
+  <a href="<?php echo $_product->getProductUrl() ?>" title="<?php echo $this->stripTags($this->getImageLabel($_product, 'small_image'), null, true) ?>" class="product-image"><img src="<?php echo $this->helper('catalog/image')->init($_product, 'small_image')->resize(135); ?>" width="135" height="135" alt="<?php echo $this->stripTags($this->getImageLabel($_product, 'small_image'), null, true) ?>" /></a>
+  <h2 class="product-name"><a href="<?php echo $_product->getProductUrl() ?>" title="<?php echo $this->stripTags($_product->getName(), null, true) ?>"><?php echo $_helper->productAttribute($_product, $_product->getName(), 'name') ?></a></h2>
+  <?php if ($_product->getRatingSummary()): ?>
+  <?php echo $this->getReviewsSummaryHtml($_product, 'short') ?>
+  <?php endif; ?>
+  <?php echo $this->getPriceHtml($_product, true) ?>
+  <div class="actions">
+  <?php if ($_product->isSaleable()): ?>
+  <button type="button" title="<?php echo $this->__('Add to Cart') ?>" class="button btn-cart" onclick="setLocation('<?php echo $this->getAddToCartUrl($_product) ?>')"><span><span><?php echo $this->__('Add to Cart') ?></span></span></button>
+  <?php else: ?>
+  <p class="availability out-of-stock"><span><?php echo $this->__('Out of stock') ?></span></p>
+  <?php endif; ?>
+  <ul class="add-to-links">
+  <?php if ($this->helper('wishlist')->isAllow()) : ?>
+  <li><a href="<?php echo $this->helper('wishlist')->getAddUrl($_product) ?>" class="link-wishlist"><?php echo $this->__('Add to Wishlist') ?></a></li>
+  <?php endif; ?>
+  <?php if ($_compareUrl = $this->getAddToCompareUrl($_product)): ?>
+  <li><span class="separator">|</span> <a href="<?php echo $_compareUrl ?>" class="link-compare"><?php echo $this->__('Add to Compare') ?></a></li>
+  <?php endif; ?>
+  </ul>
+  </div>
+  </li>
+  <?php if ($i % $_columnCount == 0 || $i == $_collectionSize): ?>
+  </ul>
+  <?php endif ?>
+  <?php endforeach ?>
+  <script type="text/javascript">decorateGeneric($$('ul.products-grid'), ['odd','even','first','last'])</script>
+  <?php endif; ?>
+
+  <div class="toolbar-bottom">
+  <?php echo $this->getToolbarHtml() ?>
+  </div>
+  </div>
+  <?php endif; ?>
+ */ ?>
